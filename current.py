@@ -161,7 +161,7 @@ def RotateQ(p, q):
 def replicate(initial_tran, LayersToDo, AdjacancyType, p, q, word, OMAE):
     if(LayersToDo <= 0):
         return
-    Draw(p, q, initial_tran, word, OMAE)
+    Draw(p, q, initial_tran, word, OMAE, LayersToDo)
     if(AdjacancyType):
         ExposedEdges = p - 3
         RotateCenter = mult_mat3(initial_tran, Rotate3P(p, q))
@@ -255,7 +255,7 @@ def Curve(pts, pts_2, p, q):
     return [X_res, Y_res]
 
 
-def Draw(p, q, T, word, OMAE):
+def Draw(p, q, T, word, OMAE, lw_width):
     x_draw = []
     y_draw = []
     for i in range(p):
@@ -263,7 +263,10 @@ def Draw(p, q, T, word, OMAE):
             tmp = change_to_circle(mult_mat_vec(T, change_to_r3([OMAE[0][i][j], OMAE[1][i][j]])))
             x_draw.append(tmp[0])
             y_draw.append(tmp[1])
-        plt.fill(x_draw, y_draw, color = decode(word, p, q))
+        if (lw_width < 3):
+            plt.fill(x_draw, y_draw, color = decode(word, p, q), lw=0.1)
+        else:
+            plt.fill(x_draw, y_draw, color = decode(word, p, q), lw=0.4)
         
         word[0] += 1
         x_draw = []
@@ -330,34 +333,40 @@ def make_pt_q(p, q):
 def decode(word, p, q):
     number_A = word[0] % p
     number_B = word[1] % q
-    return [0.1 * number_B, 0.4, 0.3 * number_A / p, 0.1 + (0.8 * number_B * number_A) / (p * q)]
+    return [0.1 * number_B, 0.3 * number_A / p, 0.1 + (0.8 * number_B * number_A) / (p * q), 0.3]
 
 
 #Тут будет такая функция: рисует базовую область. а ты в ней точки тыкаешь и круто все
 if __name__ == "__main__":  
+    an = np.linspace(0, 2 * np.pi, 100)
 #С этими цифрами можно играться
     p = int(input('Enter p:'))
     q = int(input('Enter q:'))
-    n = 3 #Количество слоев прорисовки, ну или ему пропорциональное число
+    n = int(input('Enter number of layers:')) + 1
+    #n = 3 #Количество слоев прорисовки, ну или ему пропорциональное число
     curve_length = int(input('Введите количество звеньев ломанной_1 и тыкните столько точек. Она соединит точку (0, 0) и точку (1, 0):'))
-    # curve_length = 9
     Draw_low(p, q, E(), [1, 0])
+    plt.plot(0 +  0.001 * np.cos(an), 0 + 0.001 * np.sin(an))
+    plt.plot(np.cos(np.pi / q + np.pi / p) * (np.cos(np.pi / q) ** 2 - np.sin(np.pi / p) ** 2) ** (-0.5) +  0.001 * np.cos(an), 0 + 0.001 * np.sin(an))
     input_pts = plt.ginput(curve_length, timeout = -1)
     input_pts.insert(0, (0., 0.))
     input_pts.insert(curve_length + 1, (np.cos(np.pi / q + np.pi / p) * (np.cos(np.pi / q) ** 2 - np.sin(np.pi / p) ** 2) ** (-0.5), 0.))
-    
+    pts_draw = np.asarray(input_pts)
+    plt.plot(pts_draw[:,0], pts_draw[:,1])
+    pt_q = make_pt_q(p, q)
+    plt.plot(pt_q[0] + 0.001 * np.cos(an), pt_q[1]+ 0.001 * np.sin(an))
+    plt.draw()
     curve_length_2 = int(input('Введите количество звеньев ломанной_2. Она соединит точку (1, 0) и сердину дуги:'))
-    # curve_length_2 = 9
     input_pts_2 = plt.ginput(curve_length_2, timeout = -1)
     input_pts_2.insert(0, (np.cos(np.pi / q + np.pi / p) * (np.cos(np.pi / q) ** 2 - np.sin(np.pi / p) ** 2) ** (-0.5), 0.))
-    pt_q = make_pt_q(p, q)
+    
     input_pts_2.insert(curve_length_2 + 1,  pt_q)
 
 
-    OMAE = Curve(input_pts, input_pts_2, p, q)
+    OMAE = Curve(input_pts, input_pts_2, p, q) #массив содержащий ломанную
     RotateCenter = E()
     word = [1, 0]
-    Draw(p, q, E(), word,  OMAE)
+    Draw(p, q, E(), word,  OMAE, 3)
     start_time = time.time()
     for i in range(1, p + 1):
         RotateVertex = mult_mat3(RotateCenter, RotateQ(p, q))
@@ -371,6 +380,6 @@ if __name__ == "__main__":
         word[0] += 1
     plt.xlim(-1.2, 1.2)
     plt.ylim(-1.2, 1.2)
-    an = np.linspace(0, 2 * np.pi, 100)
+    
     plt.plot( np.cos(an), np.sin(an))
     plt.show()
