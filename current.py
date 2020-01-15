@@ -333,7 +333,7 @@ def make_pt_q(p, q):
 def decode(word, p, q):
     number_A = word[0] % p
     number_B = word[1] % q
-    return [0.1 * number_B, 0.3 * number_A / p, 0.1 + (0.8 * number_B * number_A) / (p * q), 0.3]
+    return [0.1 * number_B / q, 0.3 * number_A / p, 0.1 + (0.8 * number_B * number_A) / (p * q), 0.3]
 
 
 #Тут будет такая функция: рисует базовую область. а ты в ней точки тыкаешь и круто все
